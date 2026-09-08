@@ -17,7 +17,18 @@ def create_app():
 
     # Configuration
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///healthmate.db")
+    
+    db_url = os.getenv("DATABASE_URL")
+    if db_url:
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+    else:
+        if os.getenv("VERCEL"):
+            db_url = "sqlite:////tmp/healthmate.db"
+        else:
+            db_url = "sqlite:///healthmate.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max upload
 
@@ -26,9 +37,16 @@ def create_app():
     limiter.init_app(app)
 
     # CORS
+    import re
+    cors_origins = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
+    frontend_url = os.getenv("FRONTEND_URL")
+    if frontend_url:
+        cors_origins.extend([u.strip() for u in frontend_url.split(",") if u.strip()])
+    cors_origins.append(re.compile(r"^https://.*\.vercel\.app$"))
+
     CORS(
         app,
-        origins=[os.getenv("FRONTEND_URL", "http://localhost:5173")],
+        origins=cors_origins,
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization"],
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -63,7 +81,10 @@ def create_app():
 
     # Create tables
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            app.logger.warning(f"Database table creation notice: {e}")
 
     # Health check
     @app.route("/api/health-check")
