@@ -25,8 +25,23 @@ export default function RegisterPage() {
       return
     }
 
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters long')
+      return
+    }
+
+    if (!/[A-Z]/.test(form.password)) {
+      setError('Password must contain at least one uppercase letter')
+      return
+    }
+
+    if (!/[a-z]/.test(form.password)) {
+      setError('Password must contain at least one lowercase letter')
+      return
+    }
+
+    if (!/[0-9]/.test(form.password)) {
+      setError('Password must contain at least one number')
       return
     }
 
@@ -37,7 +52,14 @@ export default function RegisterPage() {
       toast.success('Account created successfully!')
       navigate('/profile-setup')
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.')
+      const serverMsg = err.response?.data?.error
+      if (serverMsg) {
+        setError(serverMsg)
+      } else if (err.code === 'ERR_NETWORK' || !err.response) {
+        setError('Cannot connect to backend server. If deployed on Vercel, please ensure API services and DATABASE_URL are configured.')
+      } else {
+        setError('Registration failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -95,7 +117,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
-                  placeholder="At least 6 characters"
+                  placeholder="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   className="input !pr-10"
@@ -109,6 +131,7 @@ export default function RegisterPage() {
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              <p className="mt-1 text-[11px] text-slate-400">At least 8 characters with uppercase, lowercase, and a number</p>
             </div>
 
             <Input

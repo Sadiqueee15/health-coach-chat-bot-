@@ -26,7 +26,14 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${data.user.full_name}!`)
       navigate(data.has_profile ? '/app/dashboard' : '/profile-setup')
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid email or password. Please try again.')
+      const serverMsg = err.response?.data?.error
+      if (serverMsg) {
+        setError(serverMsg)
+      } else if (err.code === 'ERR_NETWORK' || !err.response) {
+        setError('Cannot connect to backend server. Please check your connection or backend deployment.')
+      } else {
+        setError('Invalid email or password. Please try again.')
+      }
     } finally {
       setLoading(false)
     }

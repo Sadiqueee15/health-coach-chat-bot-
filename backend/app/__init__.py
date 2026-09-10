@@ -23,7 +23,7 @@ def create_app():
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql://", 1)
     else:
-        if os.getenv("VERCEL"):
+        if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("LAMBDA_TASK_ROOT"):
             db_url = "sqlite:////tmp/healthmate.db"
         else:
             db_url = "sqlite:///healthmate.db"
@@ -78,6 +78,9 @@ def create_app():
     app.register_blueprint(tools_bp, url_prefix="/api/tools")
     app.register_blueprint(journal_bp, url_prefix="/api/journal")
     app.register_blueprint(memory_bp, url_prefix="/api/memory")
+
+    # Ensure all models are registered in metadata
+    from . import models
 
     # Create tables
     with app.app_context():
