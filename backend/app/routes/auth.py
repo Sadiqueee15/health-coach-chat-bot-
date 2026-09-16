@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 from .. import db, limiter
 from ..models import User, HealthProfile, UserPreference
-from ..auth import hash_password, verify_password, generate_token, validate_password_strength
+from ..auth import hash_password, verify_password, generate_token, validate_password_strength, get_or_create_demo_user
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -111,6 +111,17 @@ def login():
 def logout():
     # JWT is stateless; client removes token
     return jsonify({"message": "Logged out successfully"}), 200
+
+
+@auth_bp.route("/me", methods=["GET"])
+def get_current_user():
+    user = get_or_create_demo_user()
+    token = generate_token(user.id)
+    return jsonify({
+        "user": user.to_dict(),
+        "token": token,
+        "has_profile": True,
+    }), 200
 
 
 @auth_bp.route("/forgot-password", methods=["POST"])

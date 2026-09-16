@@ -1,14 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 
 // Pages
 import LandingPage from './pages/LandingPage'
-import LoginPage from './pages/auth/LoginPage'
-import RegisterPage from './pages/auth/RegisterPage'
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import ProfileSetupPage from './pages/ProfileSetupPage'
 import AppLayout from './layouts/AppLayout'
 import Dashboard from './pages/Dashboard'
@@ -23,25 +19,6 @@ import WeeklyReport from './pages/WeeklyReport'
 import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
 import PrivacyPage from './pages/PrivacyPage'
-
-function PrivateRoute({ children }) {
-  const { user, loading } = useAuth()
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-        <p className="text-sm text-slate-500 dark:text-slate-400">Loading HealthMate AI...</p>
-      </div>
-    </div>
-  )
-  return user ? children : <Navigate to="/login" replace />
-}
-
-function PublicRoute({ children }) {
-  const { user, loading } = useAuth()
-  if (loading) return null
-  return user ? <Navigate to="/app/dashboard" replace /> : children
-}
 
 export default function App() {
   return (
@@ -62,19 +39,21 @@ export default function App() {
             }}
           />
           <Routes>
-            {/* Public Routes */}
+            {/* Public Landing & Policy */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-            <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-            <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Protected Profile Setup */}
-            <Route path="/profile-setup" element={<PrivateRoute><ProfileSetupPage /></PrivateRoute>} />
+            {/* Bypassed Auth Routes: Immediately redirect straight to Dashboard */}
+            <Route path="/login" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/register" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/forgot-password" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/reset-password" element={<Navigate to="/app/dashboard" replace />} />
 
-            {/* Protected App Routes */}
-            <Route path="/app" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+            {/* Profile Setup */}
+            <Route path="/profile-setup" element={<ProfileSetupPage />} />
+
+            {/* Application Routes - Directly Accessible Without Login Wall */}
+            <Route path="/app" element={<AppLayout />}>
               <Route index element={<Navigate to="/app/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="chat" element={<ChatPage />} />
@@ -90,7 +69,8 @@ export default function App() {
               <Route path="settings" element={<SettingsPage />} />
             </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Catch-all fallback */}
+            <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

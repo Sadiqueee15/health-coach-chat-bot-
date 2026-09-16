@@ -77,7 +77,8 @@ export default function AppLayout() {
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    toast.success('Session reset to default guest profile')
+    navigate('/app/dashboard')
   }
 
   return (

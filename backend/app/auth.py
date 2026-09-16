@@ -33,8 +33,57 @@ def decode_token(token: str) -> dict:
     return jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
 
 
+def get_or_create_demo_user():
+    """Get existing active user or initialize the default demo user."""
+    from . import db
+    from .models import HealthProfile, UserPreference
+
+    try:
+        user = User.query.first()
+        if not user:
+            user = User(
+                full_name="Alex Morgan",
+                email="alex.morgan@healthmate.ai",
+                password_hash=hash_password("DemoPassword123!"),
+                is_active=True,
+                xp_points=120,
+            )
+            db.session.add(user)
+            db.session.flush()
+
+            profile = HealthProfile(
+                user_id=user.id,
+                age=28,
+                gender="female",
+                height_cm=168.0,
+                weight_kg=62.0,
+                target_weight_kg=58.0,
+                activity_level="moderately_active",
+                fitness_goal="improve_fitness",
+                dietary_preference="balanced",
+                target_calories=2100,
+                target_water_ml=2500,
+                target_steps=10000,
+                target_sleep_hours=8.0,
+            )
+            db.session.add(profile)
+
+            pref = UserPreference(
+                user_id=user.id,
+                theme="light",
+                measurement_system="metric",
+                ai_response_style="balanced",
+            )
+            db.session.add(pref)
+            db.session.commit()
+        return user
+    except Exception:
+        db.session.rollback()
+        return User.query.first()
+
+
 def token_required(f):
-    """Decorator to protect routes with JWT authentication."""
+    """Decorator to protect routes with JWT authentication or fallback to default active user."""
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
@@ -43,18 +92,19 @@ def token_required(f):
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
 
-        if not token:
-            return jsonify({"error": "Authentication required. Please log in."}), 401
+        current_user = None
+        if token and token not in ("demo-guest-jwt-token", "null", "undefined"):
+            try:
+                data = decode_token(token)
+                current_user = User.query.get(data.get("user_id"))
+            except Exception:
+                current_user = None
 
-        try:
-            data = decode_token(token)
-            current_user = User.query.get(data["user_id"])
-            if not current_user or not current_user.is_active:
-                return jsonify({"error": "User account not found or deactivated."}), 401
-        except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Your session has expired. Please log in again."}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"error": "Invalid authentication token."}), 401
+        if not current_user or not current_user.is_active:
+            current_user = get_or_create_demo_user()
+
+        if not current_user:
+            return jsonify({"error": "Unable to initialize user session."}), 500
 
         return f(current_user, *args, **kwargs)
 

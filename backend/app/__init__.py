@@ -22,7 +22,10 @@ def create_app():
     if db_url:
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql://", 1)
-    else:
+        elif not (db_url.startswith("postgresql://") or db_url.startswith("sqlite://")):
+            db_url = None
+
+    if not db_url:
         if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("LAMBDA_TASK_ROOT"):
             db_url = "sqlite:////tmp/healthmate.db"
         else:
@@ -36,13 +39,11 @@ def create_app():
     db.init_app(app)
     limiter.init_app(app)
 
-    # CORS
+    # CORS - allow all frontend origins seamlessly
     import re
-    cors_origins = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
-    frontend_url = os.getenv("FRONTEND_URL")
-    if frontend_url:
-        cors_origins.extend([u.strip() for u in frontend_url.split(",") if u.strip()])
-    cors_origins.append(re.compile(r"^https://.*\.vercel\.app$"))
+    cors_origins = [
+        re.compile(r"^https?://.*"),
+    ]
 
     CORS(
         app,

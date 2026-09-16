@@ -88,14 +88,14 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link to="/login">
+            <Link to="/app/chat">
               <Button variant="ghost" size="sm">
-                Sign In
+                AI Coach
               </Button>
             </Link>
-            <Link to="/register">
+            <Link to="/app/dashboard">
               <Button size="sm">
-                Get Started
+                Open App
               </Button>
             </Link>
           </div>
@@ -118,14 +118,14 @@ export default function LandingPage() {
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link to="/register" className="w-full sm:w-auto">
+          <Link to="/app/dashboard" className="w-full sm:w-auto">
             <Button size="lg" className="w-full sm:w-auto px-6 font-semibold" icon={ArrowRight}>
-              Start Your Free Account
+              Open HealthMate App
             </Button>
           </Link>
-          <Link to="/login" className="w-full sm:w-auto">
+          <Link to="/app/chat" className="w-full sm:w-auto">
             <Button variant="secondary" size="lg" className="w-full sm:w-auto px-6">
-              Sign In to Dashboard
+              Chat With AI Coach
             </Button>
           </Link>
         </div>
@@ -208,8 +208,9 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="hover:underline">Privacy Policy</Link>
-            <Link to="/login" className="hover:underline">Sign In</Link>
-            <Link to="/register" className="hover:underline">Create Account</Link>
+            <Link to="/app/dashboard" className="hover:underline">Dashboard</Link>
+            <Link to="/app/chat" className="hover:underline">AI Coach</Link>
+            <Link to="/app/food" className="hover:underline">Food Vision</Link>
           </div>
         </div>
       </footer>
