@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { generateCoachResponse } from './aiCoach'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 
@@ -84,14 +85,26 @@ const getFallbackResponse = (url, method, data) => {
   }
   if (cleanUrl.startsWith('/chat')) {
     let msg = ''
+    let persona = 'general'
     try {
       const parsed = typeof data === 'string' ? JSON.parse(data || '{}') : data
       msg = parsed?.message || ''
+      persona = parsed?.persona || 'general'
     } catch {}
 
+    let profile = null
+    try {
+      const savedUser = localStorage.getItem('hm_user')
+      if (savedUser) {
+        profile = JSON.parse(savedUser)?.profile
+      }
+    } catch {}
+
+    const coachResponse = generateCoachResponse(msg, persona, profile)
+
     return {
-      response: `### AI Coach Guidance\n\nThanks for reaching out! Here are evidence-based recommendations tailored to your goals:\n\n- **Nutrition Balance**: Fuel with lean proteins, complex whole grains, and healthy fats.\n- **Progressive Movement**: Keep workouts challenging yet manageable, focusing on good form.\n- **Recovery & Hydration**: Drink at least 2.5L of water and aim for 7–8 hours of restorative sleep.\n\n*How can I help you customize your plan today?*`,
-      reply: `Thanks for checking in! Keep focusing on your consistency and balanced recovery. How else can I assist?`,
+      response: coachResponse,
+      reply: coachResponse,
       conversation_id: 1,
     }
   }

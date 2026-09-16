@@ -164,47 +164,77 @@ def _clean_json(text: str) -> str:
 
 def _get_smart_chat_fallback(user_message: str, profile=None) -> str:
     """Provides high-quality evidence-based wellness guidance when live API key is unavailable."""
-    msg = user_message.lower()
+    msg = user_message.lower().strip()
     name = profile.fitness_goal.replace('_', ' ') if profile and getattr(profile, 'fitness_goal', None) else "general wellness"
+    weight = getattr(profile, 'weight_kg', 62) or 62
 
-    if any(w in msg for w in ["workout", "exercise", "training", "muscle", "routine", "split"]):
+    # Specific Protein & Muscle Recovery Handler
+    if any(w in msg for w in ["protein", "leucine", "amino acid", "whey", "post-workout", "muscle recovery"]):
+        min_p = round(weight * 1.6)
+        max_p = round(weight * 2.2)
+        per_meal = round(min_p / 4)
+        return (
+            f"### Evidence-Based Protein & Muscle Recovery Protocol\n\n"
+            f"To maximize muscle protein synthesis (MPS) and accelerate tissue repair for your goal of **{name}**, follow this timing and dosing framework:\n\n"
+            f"1. **Daily Intake Target**: Aim for **{min_p}g – {max_p}g of protein daily** (1.6g–2.2g per kg of body weight).\n"
+            f"2. **Meal Distribution & Leucine Threshold**: Divide intake into **3–4 meals of ~{per_meal}g–{per_meal + 10}g**, spaced 3–4 hours apart. Ensure each meal contains at least **2.5g–3g of leucine** (eggs, Greek yogurt, poultry, salmon, tofu, whey) to trigger the mTOR pathway.\n"
+            f"3. **Post-Workout Recovery Window**: Consume **25g–35g protein** within 60–90 minutes post-training, paired with **30g–50g complex carbohydrates** to replenish glycogen and reduce protein breakdown.\n"
+            f"4. **Nocturnal Support**: Consider 20g–30g of slow-digesting casein (or Greek yogurt/cottage cheese) before bed to provide an amino acid trickle overnight."
+        )
+
+    # Specific Workout Planning & Exercise
+    elif any(w in msg for w in ["workout", "exercise", "training", "routine", "split", "dumbbell", "gym", "cardio", "squat"]):
         return (
             f"### Recommended Training Framework for {name.title()}\n\n"
             "To build progressive strength and conditioning sustainably, follow these core training principles:\n\n"
-            "1. **Compound Movements**: Base your foundation around multi-joint exercises (squats, hinges, push-ups/presses, and rows/pull-ups).\n"
-            "2. **Progressive Overload**: Gradually increase resistance, reps, or control over time rather than rushing volume.\n"
-            "3. **Weekly Volume**: Aim for 3–4 focused sessions of 40–50 minutes, allowing 48 hours of recovery between the same muscle groups.\n"
-            "4. **Warm-up & Mobility**: Dedicate 5 minutes to dynamic warm-ups (hip openers, arm circles, light bodyweight circuits).\n\n"
-            "💡 *Tip: Check out the **Workout Planner** in the sidebar to generate a day-by-day split tailored to your exact equipment.*"
+            "1. **Compound Foundations**: Prioritize multi-joint movements (squats, deadlifts/hinges, push-ups/bench, rows, and overhead presses).\n"
+            "2. **Progressive Overload**: Systematically add 1 rep or 2.5–5% weight once you can complete your target rep range with pristine technique.\n"
+            "3. **Weekly Structure**: Aim for 3–4 focused sessions of 45–50 minutes, allowing 48 hours of recovery between the same muscle groups.\n"
+            "4. **Dynamic Prep**: Dedicate 5–7 minutes to hip openers, thoracic rotations, and light activation circuits before loading."
         )
-    elif any(w in msg for w in ["diet", "food", "protein", "nutrition", "meal", "calorie", "eat"]):
+
+    # Specific Fat Loss / Deficit / Diet
+    elif any(w in msg for w in ["fat loss", "lose weight", "deficit", "cutting", "diet", "calorie", "meal plan", "keto", "fasting"]):
         return (
-            "### Evidence-Based Nutritional Guidelines\n\n"
-            "Optimizing your nutrition comes down to consistency and macronutrient pacing:\n\n"
-            "- **Protein Distribution**: Target 1.4g–2.0g of protein per kg of body weight daily, distributed evenly across 3–4 meals.\n"
-            "- **Fiber & Micronutrients**: Incorporate at least 25–30g of dietary fiber daily from leafy greens, berries, legumes, and whole grains.\n"
-            "- **Hydration Balance**: Drink water consistently throughout the day (aiming for 2.5L–3.5L depending on workout intensity).\n"
-            "- **Whole Food Baseline**: Emphasize whole, minimally processed ingredients 80–90% of the time.\n\n"
-            "🥗 *Tip: You can snap a photo in **Food Vision** or generate a 7-day schedule in the **Meal Planner**.*"
+            f"### Evidence-Based Nutrition & Metabolic Pacing\n\n"
+            f"For sustainable body recomposition and energy balance aligned with **{name}**:\n\n"
+            f"- **Moderate Caloric Deficit**: Aim for 350–500 kcal below maintenance to protect metabolic rate and thyroid function.\n"
+            f"- **High Dietary Satiety**: Target 28g–35g of fiber daily from fibrous greens, berries, lentils, and oats.\n"
+            f"- **Protein Anchor**: Keep protein elevated (1.6g–2.0g/kg) to shield lean muscle tissue while in a deficit.\n"
+            f"- **Hydration & Pacing**: Drink 500ml of water 15 minutes before main meals to naturally regulate appetite."
         )
-    elif any(w in msg for w in ["sleep", "tired", "rest", "insomnia", "recovery"]):
+
+    # Sleep & Circadian Recovery
+    elif any(w in msg for w in ["sleep", "tired", "rest", "insomnia", "circadian", "wake"]):
         return (
-            "### Sleep Optimization & Recovery Protocol\n\n"
-            "Deep, restorative sleep is the cornerstone of hormonal balance and muscle repair:\n\n"
-            "1. **Circadian Consistency**: Go to bed and wake up within a 30-minute window every day, even on weekends.\n"
-            "2. **Light Exposure**: Get 10–15 minutes of natural sunlight within an hour of waking to set your cortisol rhythm.\n"
-            "3. **Evening Wind-Down**: Reduce bright artificial blue light 60 minutes before sleep and keep bedroom temperatures cool (around 18–20°C / 65–68°F).\n"
-            "4. **Caffeine Cutoff**: Avoid caffeine 8–10 hours before bed to allow adenosine to build up naturally."
+            "### Sleep Architecture & Circadian Reset Protocol\n\n"
+            "Deep, restorative sleep is when human growth hormone (HGH) is released for physical recovery:\n\n"
+            "1. **Morning Light Anchor**: Step outside for 10–15 minutes of natural sunlight within 30 minutes of waking to anchor your cortisol and melatonin rhythm.\n"
+            "2. **The 3-2-1 Evening Rule**: Stop heavy meals 3 hours before bed; stop strenuous exercise 2 hours before bed; dim screens and bright lights 1 hour before bed.\n"
+            "3. **Thermal Environment**: Keep bedroom cool (18°C–20°C / 65°F–68°F) to support natural core body temperature drop.\n"
+            "4. **Caffeine Timing**: Enforce a strict caffeine cutoff 9–10 hours before sleep."
         )
+
+    # Hydration & Electrolytes
+    elif any(w in msg for w in ["water", "hydrate", "hydration", "drink", "electrolyte"]):
+        rec_water = round(weight * 35 / 100) * 100
+        return (
+            f"### Cellular Hydration & Electrolyte Strategy\n\n"
+            f"Proper hydration powers cellular ATP production and joint lubrication:\n\n"
+            f"- **Baseline Target**: ~{rec_water}ml ({rec_water/1000:.1f}L) daily, plus 500ml–750ml per hour of heavy sweating.\n"
+            f"- **Morning Jumpstart**: Begin every morning with 500ml of water and a pinch of mineral salt or lemon.\n"
+            f"- **Electrolyte Balance**: Include natural sodium, potassium, and magnesium sources (avocados, coconut water, leafy greens, sea salt)."
+        )
+
+    # General Holistic Guidance
     else:
         return (
-            f"### Holistic Wellness Strategy\n\n"
-            f"Here are key insights to support your goal of **{name}**:\n\n"
-            "- **Consistency Over Perfection**: Sustainable micro-habits performed daily outperform extreme short-term routines.\n"
-            "- **Hydration & Energy**: Begin every morning with 500ml of water to rehydrate metabolic pathways.\n"
-            "- **Daily Activity**: Strive for 7,000–10,000 steps daily outside of formal workouts to maintain cardiovascular health.\n"
-            "- **Stress Modulation**: Practice 5 minutes of focused nasal breathing or light stretching post-work.\n\n"
-            "*How can I assist you further with your workouts, nutrition, or recovery schedule?*"
+            f"### Holistic Wellness Strategy for {name.title()}\n\n"
+            f"Regarding your query **\"{user_message.strip()}\"**:\n\n"
+            f"- **Consistency Over Perfection**: Sustainable micro-habits performed daily outperform extreme short-term routines.\n"
+            f"- **Nutrition & Recovery**: Emphasize whole, minimally processed ingredients 80–90% of the time with adequate hydration.\n"
+            f"- **Progressive Pacing**: Strive for 8,000–10,000 daily steps alongside structured resistance training.\n\n"
+            f"*Feel free to ask for a specific workout breakdown, macro calculations, or meal suggestions!*"
         )
 
 

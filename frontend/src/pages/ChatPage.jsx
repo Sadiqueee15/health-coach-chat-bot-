@@ -18,6 +18,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
+import { generateCoachResponse } from '../lib/aiCoach'
 import toast from 'react-hot-toast'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -87,16 +88,25 @@ export default function ChatPage() {
         persona: selectedPersona
       })
 
+      const replyContent = data?.response || data?.reply || data?.message || generateCoachResponse(trimmed, selectedPersona, user?.profile)
+
       const aiReply = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || data.reply || data.message || "I've processed your request. How else can I assist with your health goals?",
+        content: replyContent,
         timestamp: new Date().toISOString()
       }
       setMessages((prev) => [...prev, aiReply])
     } catch (err) {
       console.error('Chat error:', err)
-      toast.error('Failed to receive AI response. Please try again.')
+      const dynamicReply = generateCoachResponse(trimmed, selectedPersona, user?.profile)
+      const aiReply = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: dynamicReply,
+        timestamp: new Date().toISOString()
+      }
+      setMessages((prev) => [...prev, aiReply])
     } finally {
       setLoading(false)
     }
